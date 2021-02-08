@@ -19,8 +19,8 @@ library(readxl)
 library(shinythemes)
 library(stringr)
 library(mapboxapi)
-library(DT)
-library(thematic)
+library(DT) #for datatable
+library(thematic) #for automatic coherent color scheme
 #library(bslib)
 
 
@@ -95,7 +95,8 @@ Quelleigenschaften <- c("O2 Milligram", "O2 Prozent", "Leitfaehigkeit", "pH", "S
 # ------------------------------------------------------------------------------------
 
 
-thematic_shiny()
+thematic_shiny() #automatic coherent theme 
+
 ui <- navbarPage( "Quellmonitoring NP Berchtesgaden", 
                  theme = shinytheme("darkly"),
     tabPanel("Thermobuttons", # first page 
@@ -143,12 +144,12 @@ tabPanel("Rangerdaten", #second page
         )
     )
 ),
-tabPanel("Data", 
-         numericInput("maxrows", "Anzahl an Zeilen anzeigen", 25),
-         verbatimTextOutput("rawtable")
+tabPanel("Daten", 
+         DTOutput("Daten") #interactive datatable
+         #verbatimTextOutput("rawtable"), #spuckt die rohen Daten aus
          ),
-tabPanel("About this site",
-         tags$h4("Last update"),
+tabPanel("Infos",
+         tags$h4("Letztes Update"),
          
     
 )
@@ -213,8 +214,16 @@ server <- function(input, output) {
             
     })
     # third tab ---------------------------------------------------------------
-    output$rawtable <- renderPrint(
-        Thermobuttons)
+    
+    # output$Daten <- DT::renderDataTable({
+    #     Thermobuttons
+    # })
+    
+    output$Daten <- renderDT({
+        datatable(Thermobuttons, style = "bootstrap",
+                  options = list(autowidth = T), 
+                  filter = list(position = "top", clear = FALSE))
+    })
     }
 
 
