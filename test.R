@@ -187,7 +187,13 @@ tabPanel("Rangerdaten", #second page
     )
 ),
 tabPanel("Karte",
-         leafletOutput("thematic_map")),
+         div(class= "outer",
+             tags$head(includeCSS("styles.css")),
+             leafletOutput("thematic_map", width = "100%", height = "100%"),
+             absolutePanel(top = 60, left = 60, 
+                           selectInput("Parameter_Karte", "",
+                                       choices = Quelleigenschaften)))
+        ),
 tabPanel("Daten", 
          DTOutput("Daten") #interactive datatable
          #verbatimTextOutput("rawtable"), #spuckt die rohen Daten aus
@@ -258,8 +264,22 @@ server <- function(input, output) {
             
     })
     # third tab ---------------------------------------------------------------
+    # colorpal <- reactive({
+    #     colorNumeric(input$Parameter_Karte)
+    # })
     output$thematic_map <- renderLeaflet({
-        basemap
+        leaflet(Koordinaten_Ranger) %>% 
+            addTiles() %>% 
+            addCircleMarkers(lng = ~Y, lat = ~X,
+                             color = ~pal(Leitfaehigkeit),
+                             stroke = FALSE, 
+                             fillOpacity = 1,
+                             popup = ~Quellenname) %>%  
+            addLegend("bottomright", pal = pal, values = ~Leitfaehigkeit,
+                      title = "Durchschnittliche Leitfähigkeit",
+                      labFormat = labelFormat(suffix = " µS"),
+                      opacity = 1)
+        
     })
     # fourth tab---------------------------------------------------------------
     output$Daten <- renderDT({
