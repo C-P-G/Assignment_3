@@ -50,9 +50,11 @@ Thermobuttons <- Thermobuttons[!(Thermobuttons$Quellenname == ""),] # Leere Zell
 
 
 # 2.2. Koordinaten der Quellen 
-Koordinaten <- read.csv("data/Koordinaten_20_Quellen.csv", sep=";")
+Koordinaten <- read.csv("data/Koordinaten_20_Quellen_3.csv", sep=";")
 Koordinaten$Quellenname <- as.factor(Koordinaten$Quellenname)
+Koordinaten$QUELLNR <- as.factor(Koordinaten$QUELLNR)
 Koordinaten <- Koordinaten[!(Koordinaten$Quellenname == ""),] # Leere Zellen ohne Quellennamenrausschmei?en 
+
 
 # 2.3 Rangerdata 
 NPV_Monitoring <- read.csv2("data/Quellmonitoring.csv")
@@ -86,17 +88,57 @@ Rangerspatial <- merge(NPV_Monitoring, Koordinaten, by = )
 Quellenfarben <- c('0'="#F8766D", '300'="#BB9D00", '312'="#00B81F",'350'="#00C0B8", '441'="#00A5FF",'459'= "#E76BF3", '462'="#FF6C90", '503'="#C59900", '519'="#5BB300", '536'="#00C19C", '576'="#00ABFD", '578'="#DC71FA", '592'= "#FF689F", '615'="#E08B00", '816'="#85AD00", '828'="#AC88FF", '862'="#FF61C9", '863'="#ED8141", '978'= "#00BDD0")
 
 
-# 3. Dashboard------------------------------------------------------------------
-# User Interface----------------------------------------------------------------
-# Define UI for application that draws a histogram
 
 Quellnamen <- levels(Thermobuttons$Quellenname)
 Quelleigenschaften <- c("O2 Milligram", "O2 Prozent", "Leitfaehigkeit", "pH", "Schuettung")
 # ------------------------------------------------------------------------------------
 
+# Karten tab -------------------------------------------------------------------
+# Leaflet Karte zeichnen 
+
+#get statistics for water temperature 
+sum_temp <- Thermobuttons %>% group_by(Quellenname) %>% 
+    summarise(min = min(WT,na.rm = T),
+              max = max(WT,na.rm = T),
+              mean = mean(WT,na.rm = T),
+              median = median(WT,na.rm = T),
+              sd = sd(WT,na.rm = T),
+    )
+
+sum_ranger <- NPV_Monitoring %>% group_by(QUELLNR) %>%
+    summarise_each(funs(mean(., na.rm = TRUE)))
+
+    
+    
+Koordinaten_Ranger <- merge(x = sum_ranger, y = Koordinaten, by = "QUELLNR")
+# Colors map -------------------------------------------------------------------
+# ph_Color <- function(Koordinaten_Ranger) {
+#     sapply(Koordinaten_Ranger$Leitfaehigkeit, function(Leitfaehigkeit) {
+#         if(Leitfaehigkeit<= )
+#     })
+# }
+
+pal <- colorNumeric(
+    palette = "Blues",
+    domain = Koordinaten_Ranger$Leitfaehigkeit
+)
+
+basemap = leaflet(Koordinaten_Ranger) %>% 
+    addTiles() %>% 
+    addCircleMarkers(lng = ~Y, lat = ~X,
+                     color = ~pal(Leitfaehigkeit),
+                     stroke = FALSE, 
+                     fillOpacity = 1,
+                     popup = ~Quellenname) %>%  
+    addProviderTiles(providers$CartoDB.DarkMatter) %>% 
+    addLegend("bottomright", pal = pal, values = ~Leitfaehigkeit,
+              title = "Durchschnittliche Leitfähigkeit",
+              labFormat = labelFormat(suffix = " µS"),
+              opacity = 1)
+
 
 thematic_shiny() #automatic coherent theme 
-
+# UI --------------------------------------------------------------------------
 ui <- navbarPage( "Quellmonitoring NP Berchtesgaden", 
                  theme = shinytheme("darkly"),
     tabPanel("Thermobuttons", # first page 
@@ -144,6 +186,8 @@ tabPanel("Rangerdaten", #second page
         )
     )
 ),
+tabPanel("Karte",
+         leafletOutput("thematic_map")),
 tabPanel("Daten", 
          DTOutput("Daten") #interactive datatable
          #verbatimTextOutput("rawtable"), #spuckt die rohen Daten aus
@@ -214,11 +258,10 @@ server <- function(input, output) {
             
     })
     # third tab ---------------------------------------------------------------
-    
-    # output$Daten <- DT::renderDataTable({
-    #     Thermobuttons
-    # })
-    
+    output$thematic_map <- renderLeaflet({
+        basemap
+    })
+    # fourth tab---------------------------------------------------------------
     output$Daten <- renderDT({
         datatable(Thermobuttons, style = "bootstrap",
                   options = list(autowidth = T), 
