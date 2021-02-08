@@ -191,6 +191,7 @@ tabPanel("Karte",
              tags$head(includeCSS("styles.css")),
              leafletOutput("thematic_map", width = "100%", height = "100%"),
              absolutePanel(top = 60, left = 60, 
+                           draggable = T, 
                            selectInput("Parameter_Karte", "",
                                        choices = Quelleigenschaften)))
         ),
