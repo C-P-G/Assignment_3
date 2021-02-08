@@ -35,9 +35,9 @@ The objective of this dashboard is to provide a tool for the Nationalpark to eas
 
 The two key parts are the customization by time frame and spring. 
 1. Customize graphs 
-![Alt text](/images/temperature_example.jpg?raw=true "Temperature plot")
+![Alt text](/images/temperature_example_plot.JPG?raw=true "Temperature plot")
 2. Pulling subsets of the data
-![Alt text](/images/datasubset_example.jpg?raw=true "Data subset")
+![Alt text](/images/datasubset_example.JPG?raw=true "Data subset")
 
 ## Use of Shinydashboards
 
