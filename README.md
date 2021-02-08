@@ -31,7 +31,13 @@ kable(Thermobuttons[155:160,], caption = "Raw Thermobutton data example")
 
 ### Objective of the Dashboard
 
-The objective of this dashboard is to provide a tool for the Nationalpark to easily create and download custom graphs and data for specific research questions.
+The objective of this dashboard is to provide a tool for the Nationalpark to easily create and download custom graphs and data for specific research questions. The dashboard should be able to give an overview of the data and be a tool to explore the datasets more easily. 
+
+The two key parts are the customization by time frame and spring. 
+1. Customize graphs 
+![Alt text](/images/temperature_example.jpg?raw=true "Temperature plot")
+2. Pulling subsets of the data
+![Alt text](/images/datasubset_example.jpg?raw=true "Data subset")
 
 ## Use of Shinydashboards
 
