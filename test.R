@@ -182,7 +182,8 @@ tabPanel("Rangerdaten", #second page
             downloadButton("downloadRangerPlot", "Graphik speichern")
         ),
         mainPanel(
-            plotOutput("Rangerplot")
+            plotOutput("Rangerplot"),
+            verbatimTextOutput("Rangerstats")
         )
     )
 ),
@@ -200,11 +201,12 @@ tabPanel("Karte",
                                   tags$img(src= "NP_Logo.jpg", height = '40', width = "auto"))))
         ),
 tabPanel("Daten", 
-         DTOutput("Daten") #interactive datatable
-         #verbatimTextOutput("rawtable"), #spuckt die rohen Daten aus
+         DT:: dataTableOutput("Daten"), #interactive datatable
+         downloadButton("downloadAllData", "Download All Data")
          ),
 tabPanel("Infos",
-         tags$h4("Letztes Update"),
+         tags$h4("Letztes Update",Sys.Date()),
+         tags$a(href="https://www.nationalpark-berchtesgaden.bayern.de/nationalpark/forschung/umweltbeobachtung/quellenmonitoring.htm", "Quellmonitoring")
          
     
 )
@@ -254,6 +256,13 @@ server <- function(input, output) {
             filter(QUELLNR == input$QuellauswahlRanger) %>% 
             filter()
     })
+    statisticsRanger <- reactive({
+        req(input$Rangerdate)
+        req(input$QuellauswahlRanger)
+        NPV_Monitoring %>% filter(NPV_Monitoring$Datum >= input$Rangerdate[1] & NPV_Monitoring$Datum <= input$Rangerdate[2]) %>% 
+            filter(QUELLNR == input$QuellauswahlRanger) %>% select(input$Parameter) %>% 
+            filter()
+    })
     
     output$Rangerplot <- renderPlot({
         ggplot(filteredRanger())+
@@ -261,12 +270,12 @@ server <- function(input, output) {
             xlab("")+
             scale_color_manual(values = Quellenfarben)+
             ylab(input$Parameter)
-        
-         # geom_line(aes(color = QUELLNR))+
-          #geom_point(aes(color = QUELLNR))+
-          #xlab("")+
-          #scale_color_manual(values = Quellenfarben)
-            
+    })
+  # statsRanger <- reactive({
+  #     filteredRanger %>% select(input$Parameter)
+  # })
+    output$Rangerstats <- renderPrint({
+        summary(statisticsRanger())
     })
     # third tab ---------------------------------------------------------------
     # colorpal <- reactive({
@@ -286,10 +295,38 @@ server <- function(input, output) {
                       opacity = 1)
         
     })
+    
+    PopupPlot <- function(){
+        
+    }
     # fourth tab---------------------------------------------------------------
-    output$Daten <- renderDT({
+    # output$Daten <- DT::renderDataTable(
+    #     datatable(data = Thermobuttons, style = "bootstrap", #bootstrap for overall theme
+    #               options = list(autowidth = T),  
+    #               filter = list(position = "top", clear = FALSE),  # allows filtering
+    #               extensions = 'Buttons', options = list(
+    #                   dom = 'Bfrtip',
+    #                   buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+    #               )
+    #               )
+    # )
+    data <- Thermobuttons
+    
+    #download all data 
+    output$downloadAllData <- downloadHandler(
+        filename = function() {
+            paste("data-", Sys.Date(), ".csv", sep="")
+        },
+        content = function(file){
+            write.csv(data,file)
+        }
+    )
+    # output$downloadselectedData <- downloadHandler(
+    #     filename = function()
+    # )
+    output$Daten <-   renderDT({
         datatable(Thermobuttons, style = "bootstrap",
-                  options = list(autowidth = T), 
+                  options = list(autowidth = T),
                   filter = list(position = "top", clear = FALSE))
     })
     }
