@@ -193,7 +193,11 @@ tabPanel("Karte",
              absolutePanel(top = 60, left = 60, 
                            draggable = T, 
                            selectInput("Parameter_Karte", "",
-                                       choices = Quelleigenschaften)))
+                                       choices = Quelleigenschaften)),
+             absolutePanel(id = "logo", bottom = 20, left = 20, fixed = TRUE,
+                           draggable = F, width = 60, height = "auto",
+                           tags$a(href="https://www.nationalpark-berchtesgaden.bayern.de/",
+                                  tags$img(src= "NP_Logo.jpg", height = '40', width = "auto"))))
         ),
 tabPanel("Daten", 
          DTOutput("Daten") #interactive datatable
