@@ -158,7 +158,8 @@ ui <- navbarPage( "Quellmonitoring NP Berchtesgaden",
         mainPanel(
             plotOutput(outputId = "WTplot"), 
             br(),
-            leafletOutput(outputId = "Karte") # add map to show (and later select springs)
+            verbatimTextOutput("Thermostats")
+          #  leafletOutput(outputId = "Karte") # add map to show (and later select springs)
         ))
     ),
 tabPanel("Rangerdaten", #second page
@@ -240,6 +241,9 @@ server <- function(input, output) {
             ggsave(file, plot = last_plot())
         }
     )
+    output$Thermostats <- renderPrint({
+        summary(filteredThermo())
+    })
    #  output$Karte <- renderLeaflet({
    #      leaflet(Thermobuttons) %>%
    #          addTiles() %>%
