@@ -90,7 +90,7 @@ Quellenfarben <- c('0'="#F8766D", '300'="#BB9D00", '312'="#00B81F",'350'="#00C0B
 
 
 Quellnamen <- levels(Thermobuttons$Quellenname)
-Quelleigenschaften <- c("O2 Milligram", "O2 Prozent", "Leitfaehigkeit", "pH", "Schuettung")
+Quelleigenschaften <- c("O2.Milligram", "O2.Prozent", "Leitfaehigkeit", "pH", "Schuettung")
 # ------------------------------------------------------------------------------------
 
 # Karten tab -------------------------------------------------------------------
@@ -111,30 +111,6 @@ sum_ranger <- NPV_Monitoring %>% group_by(QUELLNR) %>%
     
     
 Koordinaten_Ranger <- merge(x = sum_ranger, y = Koordinaten, by = "QUELLNR")
-# Colors map -------------------------------------------------------------------
-# ph_Color <- function(Koordinaten_Ranger) {
-#     sapply(Koordinaten_Ranger$Leitfaehigkeit, function(Leitfaehigkeit) {
-#         if(Leitfaehigkeit<= )
-#     })
-# }
-
-pal <- colorNumeric(
-    palette = "Blues",
-    domain = Koordinaten_Ranger$Leitfaehigkeit
-)
-
-basemap = leaflet(Koordinaten_Ranger) %>% 
-    addTiles() %>% 
-    addCircleMarkers(lng = ~Y, lat = ~X,
-                     color = ~pal(Leitfaehigkeit),
-                     stroke = FALSE, 
-                     fillOpacity = 1,
-                     popup = ~Quellenname) %>%  
-    addProviderTiles(providers$CartoDB.DarkMatter) %>% 
-    addLegend("bottomright", pal = pal, values = ~Leitfaehigkeit,
-              title = "Durchschnittliche Leitfähigkeit",
-              labFormat = labelFormat(suffix = " µS"),
-              opacity = 1)
 
 
 thematic_shiny() #automatic coherent theme 
@@ -192,7 +168,7 @@ tabPanel("Karte",
          div(class= "outer",
              tags$head(includeCSS("styles.css")),
              leafletOutput("thematic_map", width = "100%", height = "100%"),
-             absolutePanel(top = 60, left = 60, 
+             absolutePanel(top = 0, left = 60, 
                            draggable = T, 
                            selectInput("Parameter_Karte", "",
                                        choices = Quelleigenschaften)),
@@ -244,14 +220,6 @@ server <- function(input, output) {
     output$Thermostats <- renderPrint({
         summary(filteredThermo())
     })
-   #  output$Karte <- renderLeaflet({
-   #      leaflet(Thermobuttons) %>%
-   #          addTiles() %>%
-   #          addMarkers(lng = ~Y, lat = ~X,  popup = ~Quellenname)
-   # #       addMapboxTiles(style_id = "ckkf6r4ov1y6j17pgw2nha4bf",
-   # #                       username ="clairepg") %>%
-   #      #addAwesomeMarkers(lng=dfInput()$Y, lat=dfInput()$X)
-   #  })
     #second tab-------------------------------------------------
     filteredRanger <- reactive({
         req(input$Rangerdate)
@@ -282,28 +250,38 @@ server <- function(input, output) {
         summary(statisticsRanger())
     })
     # third tab ---------------------------------------------------------------
-    # colorpal <- reactive({
-    #     colorNumeric(input$Parameter_Karte)
-    # })
-    output$thematic_map <- renderLeaflet({
-        leaflet(Koordinaten_Ranger) %>% 
-            addTiles() %>% 
-            addCircleMarkers(lng = ~Y, lat = ~X,
-                             color = ~pal(Leitfaehigkeit),
-                             stroke = FALSE, 
-                             fillOpacity = 1,
-                             popup = ~Quellenname) %>%  
-            addLegend("bottomright", pal = pal, values = ~Leitfaehigkeit,
-                      title = "Durchschnittliche Leitfähigkeit",
-                      labFormat = labelFormat(suffix = " µS"),
-                      opacity = 1) %>% 
-        addMapboxTiles(style_id = "ckkf6r4ov1y6j17pgw2nha4bf", username ="clairepg")
-        
+    mapfilter <- eventReactive(input$Parameter_Karte,{
+      Koordinaten_Ranger %>% select(input$Parameter_Karte)
     })
     
-    PopupPlot <- function(){
+   # pal <- reactive(
+   #   colorNumeric(
+   #     palette = "Blues",
+   #     domain = paste(Koordinaten_Ranger, "input$Parameter_Karte", sep= "")
+   #   )
+   # ) 
+    
+    
+    output$thematic_map <- renderLeaflet({
+        leaflet() %>% 
+            addTiles() %>% 
+            addCircleMarkers(lng = Koordinaten_Ranger$Y, lat = Koordinaten_Ranger$X,
+                            # color = ~pal(Koordinaten_Ranger[[input$Parameter_Karte]]),
+                             stroke = FALSE, 
+                             fillOpacity = 1,
+                             popup = Koordinaten$Quellenname)%>% 
+        addMapboxTiles(style_id = "ckkf6r4ov1y6j17pgw2nha4bf", username ="clairepg")
+            # addLegend("bottomright", pal = pal, values = ~input$Parameter_Karte,
+            #           title = "Durchschnittliche", input$Parameter_Karte,
+            #           labFormat = labelFormat(suffix = " µS"),
+            #           opacity = 1) %>% 
+            # 
         
-    }
+    })
+    # observeEvent(input$Parameter_Karte, #update map with Selection of column
+    #              )
+    
+   
     # fourth tab---------------------------------------------------------------
     # output$Daten <- DT::renderDataTable(
     #     datatable(data = Thermobuttons, style = "bootstrap", #bootstrap for overall theme
@@ -326,9 +304,6 @@ server <- function(input, output) {
             write.csv(data,file)
         }
     )
-    # output$downloadselectedData <- downloadHandler(
-    #     filename = function()
-    # )
     output$Daten <-   renderDT({
         datatable(Thermobuttons, style = "bootstrap",
                   options = list(autowidth = T),
