@@ -26,8 +26,8 @@ library(thematic) #for automatic coherent color scheme
 
 #  Token ----------------------------------------------------------------------------------
 #set key
-#token <- mapboxapi::mb_access_token("pk.eyJ1IjoiY2xhaXJlcGciLCJhIjoiY2toODBrNXVjMDh0czJ5bWljNm12Z3ZxOSJ9.6trWqxgjyLsdJQvZn4ZVVA",
-#                                    install = TRUE, overwrite = T)
+token <- mapboxapi::mb_access_token("pk.eyJ1IjoiY2xhaXJlcGciLCJhIjoiY2toODBrNXVjMDh0czJ5bWljNm12Z3ZxOSJ9.6trWqxgjyLsdJQvZn4ZVVA",
+                                    install = TRUE, overwrite = T)
 
 
 # 1. Import der Datens?tzen ----------------------------------------------------
@@ -296,7 +296,8 @@ server <- function(input, output) {
             addLegend("bottomright", pal = pal, values = ~Leitfaehigkeit,
                       title = "Durchschnittliche Leitfähigkeit",
                       labFormat = labelFormat(suffix = " µS"),
-                      opacity = 1)
+                      opacity = 1) %>% 
+        addMapboxTiles(style_id = "ckkf6r4ov1y6j17pgw2nha4bf", username ="clairepg")
         
     })
     
