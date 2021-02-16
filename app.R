@@ -103,7 +103,7 @@ sum_temp <- Thermobuttons %>% group_by(Quellenname) %>%
               max = max(WT,na.rm = T),
               mean = mean(WT,na.rm = T),
               median = median(WT,na.rm = T),
-              sd = sd(WT,na.rm = T),
+              sd = sd(WT,na.rm = T)
     )
 
 sum_ranger <- NPV_Monitoring %>% group_by(QUELLNR) %>%
@@ -254,18 +254,15 @@ server <- function(input, output) {
     # mapfilter <- eventReactive(input$Parameter_Karte,{
     #   Koordinaten_Ranger %>% select(input$Parameter_Karte)
     # })
- 
-   output$thematic_map <- renderLeaflet({
-     # create a colume based on which parameter is selected in input 
-    cols <- input$Parameter_Karte
-    cols <- as.numeric(Koordinaten_Ranger$Leitfaehigkeit)
-    df <- data.frame(Koordinaten_Ranger[,cols])
-   })
+  
+  
+    
+   
     
     pal <- reactive(
      colorNumeric(
        palette = "Blues",
-       domain = paste(Koordinaten_Ranger, "input$Parameter_Karte", sep= "")
+       domain = paste(sum_ranger, "input$Parameter_Karte", sep= "")
      )
    )
     
@@ -274,16 +271,16 @@ server <- function(input, output) {
         leaflet() %>% 
             addTiles() %>% 
             addCircleMarkers(lng = Koordinaten_Ranger$Y, lat = Koordinaten_Ranger$X,
-                            color = ~pal(Koordinaten_Ranger[[input$Parameter_Karte]]),
+                             color = input$Parameter_Karte,
                              stroke = FALSE, 
                              fillOpacity = 1,
                              popup = Koordinaten$Quellenname,
                              group = "CircleMarkers")%>% 
-        addMapboxTiles(style_id = "ckkf6r4ov1y6j17pgw2nha4bf", username ="clairepg") %>% 
-            addLegend("bottomright", pal = pal, values = ~input$Parameter_Karte,
-                      title = "Durchschnittliche", input$Parameter_Karte,
-                      labFormat = labelFormat(suffix = " ÂµS"),
-                      opacity = 1)
+        addMapboxTiles(style_id = "ckkf6r4ov1y6j17pgw2nha4bf", username ="clairepg")
+            # addLegend("bottomright", pal = pal, values = ~input$Parameter_Karte,
+            #           title = paste("Durchschnittliche", input$Parameter_Karte),
+            #           labFormat = labelFormat(suffix = "µS"),
+            #           opacity = 1)
 
         
     })
